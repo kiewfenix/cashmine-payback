@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Link, Stack } from "expo-router";
 import { useCallback, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -34,7 +34,19 @@ export default function BalancesScreen() {
   return (
     <>
       <Stack.Screen
-        options={{ headerLeft: () => <HeaderButton title="Refresh" onPress={() => void refetch()} busy={refreshing} /> }}
+        options={{
+          headerLeft: () => <HeaderButton title="Refresh" onPress={() => void refetch()} busy={refreshing} />,
+          headerRight: () => (
+            <View style={styles.headerLinks}>
+              <Link href="/activity" style={styles.headerLink}>
+                <Text style={styles.headerLinkText}>Activity</Text>
+              </Link>
+              <Link href="/token" accessibilityLabel="Change API token" style={styles.headerLink}>
+                <Text style={styles.headerLinkText}>Token</Text>
+              </Link>
+            </View>
+          ),
+        }}
       />
       <ScrollView contentContainerStyle={styles.content}>
         {data === null && loading ? <Skeleton /> : null}
@@ -139,6 +151,9 @@ const styles = StyleSheet.create({
   freshness: { fontSize: 13, color: colors.muted, marginTop: spacing.xs },
   freshnessStale: { color: colors.warning, fontWeight: "600" },
   empty: { fontSize: 15, color: colors.muted },
+  headerLinks: { flexDirection: "row", alignItems: "center" },
+  headerLink: { paddingHorizontal: spacing.sm, paddingVertical: spacing.sm },
+  headerLinkText: { color: colors.accent, fontSize: 16, fontWeight: "600" },
   skeleton: { backgroundColor: colors.border, borderRadius: 16 },
   skeletonSummary: { height: 96 },
   skeletonCard: { height: 180 },
