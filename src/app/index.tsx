@@ -67,7 +67,7 @@ function Balances({ data, error, refreshing, onRetry }: BalancesProps) {
         <Text style={styles.summaryLabel}>Available to claim</Text>
         <Text style={styles.summaryValue}>{totals.available}</Text>
         <Text style={styles.summaryPending}>Pending {totals.pending}</Text>
-        <Text style={[styles.freshness, stale && styles.freshnessStale]} accessibilityLiveRegion="polite">
+        <Text style={[styles.freshness, stale && styles.freshnessStale]}>
           {stale ? "Stale · " : ""}Updated {formatClock(data.asOf)} · {age} s ago
         </Text>
       </View>

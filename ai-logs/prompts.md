@@ -73,3 +73,9 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 > - Freshness line "Updated 19:20:26 · 12 s ago" from asOf, ticking every second; amber "stale" when older than 60 s or when the last refresh failed, while still showing the last good data with the error above it.
 > - States: initial loading skeleton; error with a Retry button and a friendly message per error type (ApiError message, NetworkError "Can't reach CashMine", TimeoutError); 401 → token screen; header Refresh button; auto refresh every 15 s. No pull-to-refresh (react-native-web doesn't support it).
 > Design for a 390px phone. Check it in the browser. npx tsc --noEmit, npx expo lint. Commit `feat: balances screen` and push.
+
+**Done:** `src/hooks/useResource.ts` (abortable load, keeps last good data, polls every 15 s only while the tab is visible), `src/hooks/useNow.ts`, `src/lib/format.ts`, `src/ui/{ErrorBanner,HeaderButton}.tsx`, `src/components/AssetCard.tsx`, the balances screen in `src/app/index.tsx` (USD totals via `sumUsdCents`, ticking freshness line, stale/amber state, skeleton, error + retry, header Refresh) and a stub `src/app/claim/[asset].tsx` so the Claim buttons have a typed route. Mistake on my side: the first commit `feat: balances screen` went out with a tsc error (typed routes had not regenerated for the new claim route) and two React Compiler lint errors in the hook, because my `set -e` guard did not stop the chain. Fixed in `fix: resource hook lint and claim route types` (restarted the dev server to regenerate route types, removed the ref write during render, documented one eslint-disable for the fetch kickoff). Both pushed.
+
+## 2026-10-23 20:00 UTC
+
+> Before we move forward:  install the playwright library and test e2e already created functionality + pay attention to initial requirements for the responsive layout on the small phones. After - give me the short list of what is done well and what should be fixed.

@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
 import type { BalanceItem } from "@/api/types";
-import { formatAmount, formatAmountUsd } from "@/lib/format";
+import { formatAmount, formatAmountUsd, formatPrice } from "@/lib/format";
 import { isZero, toUnits } from "@/lib/money";
 import { Button } from "@/ui/Button";
 import { colors, spacing } from "@/ui/theme";
@@ -35,7 +35,7 @@ export function AssetCard({ item }: AssetCardProps) {
       <View style={styles.rows}>
         <Row label="Pending" value={`${formatAmount(item.pending, item.decimals)} ${item.asset}`} />
         <Row label="Claiming" value={`${formatAmount(item.claiming, item.decimals)} ${item.asset}`} />
-        <Row label="Price" value={`$${item.usdPrice}`} />
+        <Row label="Price" value={formatPrice(item.usdPrice)} />
       </View>
       <Button
         title={claimable ? `Claim ${item.asset}` : "Nothing to claim"}

@@ -18,6 +18,14 @@ export function formatAmountUsd(amount: string, decimals: number, usdPrice: stri
   }
 }
 
+/** "$67,312.45" from a price string, keeping the API's own precision (prices are not rounded to cents). */
+export function formatPrice(usdPrice: string): string {
+  const [whole, fraction] = usdPrice.split(".");
+  if (!/^\d+$/.test(whole)) return `$${usdPrice}`;
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return fraction ? `$${grouped}.${fraction}` : `$${grouped}`;
+}
+
 /** "19:20:26" in the viewer's locale. */
 export function formatClock(iso: string): string {
   const date = new Date(iso);
