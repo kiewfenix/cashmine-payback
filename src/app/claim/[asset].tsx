@@ -189,6 +189,7 @@ function ClaimForm({ item, asOf, options, onRefresh }: ClaimFormProps) {
               <Text style={styles.destinationText}>{d.label}</Text>
             </Pressable>
           ))}
+          {!selectedDestination ? <Text style={styles.hint}>Choose where to send it.</Text> : null}
         </>
       ) : (
         <Text style={styles.hint}>Destination: {destinationLabel}</Text>
