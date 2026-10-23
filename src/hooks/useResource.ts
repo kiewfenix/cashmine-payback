@@ -24,7 +24,10 @@ function isPageVisible(): boolean {
   return typeof document === "undefined" || document.visibilityState !== "hidden";
 }
 
-/** Loads something cancellable, keeps the last good value, optionally polls while the page is visible. */
+/**
+ * Loads something cancellable, keeps the last good value, optionally polls while the page is visible.
+ * `load` must be stable (useCallback): a new `load` restarts the request.
+ */
 export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, options: ResourceOptions = {}): Resource<T> {
   const { pollMs, enabled = true } = options;
   const [data, setData] = useState<T | null>(null);
@@ -32,8 +35,6 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, option
   const [inFlight, setInFlight] = useState(false);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
-  const loadRef = useRef(load);
-  loadRef.current = load;
 
   const run = useCallback(async () => {
     controllerRef.current?.abort();
@@ -41,7 +42,7 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, option
     controllerRef.current = controller;
     setInFlight(true);
     try {
-      const next = await loadRef.current(controller.signal);
+      const next = await load(controller.signal);
       if (controller.signal.aborted) return;
       setData(next);
       setError(null);
@@ -55,13 +56,15 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, option
         setInFlight(false);
       }
     }
-  }, []);
+  }, [load]);
 
   useEffect(() => {
     if (!enabled) return;
+    // Kicking off the fetch is this effect's purpose; the state it sets is the request status.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void run();
     return () => controllerRef.current?.abort();
-  }, [enabled, load, run]);
+  }, [enabled, run]);
 
   useEffect(() => {
     if (!enabled || !pollMs) return;
