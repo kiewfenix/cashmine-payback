@@ -119,3 +119,5 @@ No prompt was sent for this step. With 30 minutes left, the AI announced it was 
 ## 2026-10-23 20:35 UTC
 
 > Add src/app/activity.tsx linked from the home header: GET /v1/activity limit 20, newest first, "Load more" with nextCursor until it is null, each row shows type (accrual / reversal / claim), asset, signed amount (negative in red), status, exchange, time; loading, error+retry, empty and end-of-list states. tsc + lint. Commit `feat: activity history` and push.
+
+**Done:** `src/app/activity.tsx` (first page through `useResource`, further pages appended with "Load more" until `nextCursor` is null, inline error + retry for a failed page, empty and end states; amounts shown as the API sends them because activity items carry no decimals), "Activity" link in the home header next to "Token", route registered. One lint error (unescaped apostrophe) fixed before committing. E2E added that opens Activity, pages once and checks for overflow at 320 px; passes. README and NOTES updated so Activity is no longer listed as not built. Commits `feat: activity history` and `docs: activity in readme and notes, final ai logs`, pushed.

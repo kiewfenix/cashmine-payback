@@ -68,6 +68,22 @@ test.describe("token and balances", () => {
     await expect(page.getByText(/Couldn't refresh/)).toBeHidden({ timeout: 30_000 });
   });
 
+  test("shows paginated activity from the home header", async ({ page }, testInfo) => {
+    await page.goto("/");
+    await enterToken(page, token);
+    await page.getByRole("link", { name: "Activity" }).click({ timeout: 30_000 });
+    const rows = page.getByText(/^(Accrual|Reversal|Claim)( · .+)?$/).filter({ visible: true });
+    await expect(rows.first()).toBeVisible({ timeout: 30_000 });
+    const before = await rows.count();
+    const more = page.getByRole("button", { name: "Load more" });
+    if (await more.isVisible()) {
+      await more.click();
+      await expect.poll(async () => rows.count(), { timeout: 30_000 }).toBeGreaterThan(before);
+    }
+    expect(await horizontalOverflow(page)).toBeLessThanOrEqual(0);
+    await page.screenshot({ path: `e2e/screenshots/activity-${testInfo.project.name}.png`, fullPage: false });
+  });
+
   test("navigates to the claim screen for an asset", async ({ page }) => {
     await page.goto("/");
     await enterToken(page, token);

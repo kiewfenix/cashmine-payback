@@ -30,7 +30,7 @@ Tool: Claude Code in VS Code. `ai-logs/prompts.md` has every prompt with a UTC t
 - **A time I disagreed or rejected a suggestion.** The AI added `Co-Authored-By` trailers and multi-line bodies to commits. I rejected that and set the rule in `CLAUDE.md`: one short conventional line, no trailers (19:31). I also pushed back on its plan to go straight from balances to the claim flow: I inserted an e2e and small-phone layout review first (20:00), which is what caught the polling bug above and two layout details (a live region on a ticking label, an unformatted price).
 
 ## Not done / known issues
-- **Activity history** (priority 4) is not built; the endpoint client exists (`getActivity`), the screen does not.
+- **Activity history** was added in the last 25 minutes: it shows raw signed amounts as the API sends them (activity items carry no `decimals`), and "Load more" errors are shown inline rather than retried automatically.
 - No e2e for the unknown-outcome path (504/timeout on `POST /v1/claims`); it is covered by code review only. Next step: Playwright route interception that returns 504 once and asserts the same `Idempotency-Key` is resent.
 - A very large USD total could wrap the 36 px headline at 320 px; needs a smaller font step.
 - List amounts are truncated to 8 decimals for readability; the exact value appears on the claim screen and in Max.
@@ -38,4 +38,4 @@ Tool: Claude Code in VS Code. `ai-logs/prompts.md` has every prompt with a UTC t
 - Failed and completed claim lines on the balances screen come from the local store, so they do not survive clearing browser storage; the activity feed would be the durable source.
 - When a GET is rate-limited with a long `retryAfterMs`, the UI shows a spinner without saying why.
 - Route types are generated into gitignored `.expo/`; a fresh clone needs `npx expo start` once before `tsc` passes.
-- With more time: the activity screen, polling balances every 5 s while a claim is in flight, destination labels on the status screen, and visual regression screenshots in CI.
+- With more time: polling balances every 5 s while a claim is in flight, destination labels on the status screen, grouping activity by day, and visual regression screenshots in CI.
