@@ -14,9 +14,11 @@ export interface Resource<T> {
   refetch: () => Promise<void>;
 }
 
-export interface ResourceOptions {
+export interface ResourceOptions<T> {
   /** Re-load every N ms while the page is visible. */
   pollMs?: number;
+  /** Polling continues only while this returns true for the current data (default: always). */
+  pollWhile?: (data: T | null) => boolean;
   enabled?: boolean;
 }
 
@@ -28,13 +30,19 @@ function isPageVisible(): boolean {
  * Loads something cancellable, keeps the last good value, optionally polls while the page is visible.
  * `load` must be stable (useCallback): a new `load` restarts the request.
  */
-export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, options: ResourceOptions = {}): Resource<T> {
-  const { pollMs, enabled = true } = options;
+export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, options: ResourceOptions<T> = {}): Resource<T> {
+  const { pollMs, pollWhile, enabled = true } = options;
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [inFlight, setInFlight] = useState(false);
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
   const controllerRef = useRef<AbortController | null>(null);
+  const dataRef = useRef<T | null>(null);
+  const pollWhileRef = useRef(pollWhile);
+  useEffect(() => {
+    dataRef.current = data;
+    pollWhileRef.current = pollWhile;
+  }, [data, pollWhile]);
 
   const run = useCallback(async () => {
     controllerRef.current?.abort();
@@ -69,7 +77,7 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, option
   useEffect(() => {
     if (!enabled || !pollMs) return;
     const timer = setInterval(() => {
-      if (isPageVisible()) void run();
+      if (isPageVisible() && (pollWhileRef.current?.(dataRef.current) ?? true)) void run();
     }, pollMs);
     const onVisible = () => {
       if (isPageVisible()) void run();

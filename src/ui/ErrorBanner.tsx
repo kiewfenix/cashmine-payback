@@ -7,14 +7,15 @@ interface ErrorBannerProps {
   message: string;
   onRetry?: () => void;
   retrying?: boolean;
+  retryLabel?: string;
   tone?: "danger" | "warning";
 }
 
-export function ErrorBanner({ message, onRetry, retrying = false, tone = "danger" }: ErrorBannerProps) {
+export function ErrorBanner({ message, onRetry, retrying = false, retryLabel = "Retry", tone = "danger" }: ErrorBannerProps) {
   return (
     <View style={[styles.banner, tone === "warning" ? styles.warning : styles.danger]} accessibilityRole="alert">
       <Text style={[styles.text, tone === "warning" ? styles.warningText : styles.dangerText]}>{message}</Text>
-      {onRetry ? <Button title="Retry" variant="secondary" onPress={onRetry} loading={retrying} /> : null}
+      {onRetry ? <Button title={retryLabel} variant="secondary" onPress={onRetry} loading={retrying} /> : null}
     </View>
   );
 }

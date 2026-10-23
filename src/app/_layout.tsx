@@ -1,17 +1,20 @@
 import { Link, Stack } from "expo-router";
 import { StyleSheet, Text, View } from "react-native";
 
+import { ClaimsProvider } from "@/state/claims";
 import { TokenProvider, useToken } from "@/state/token";
 import { colors, FRAME_MAX_WIDTH, spacing } from "@/ui/theme";
 
 export default function RootLayout() {
   return (
     <TokenProvider>
-      <View style={styles.outer}>
-        <View style={styles.frame}>
-          <RootStack />
+      <ClaimsProvider>
+        <View style={styles.outer}>
+          <View style={styles.frame}>
+            <RootStack />
+          </View>
         </View>
-      </View>
+      </ClaimsProvider>
     </TokenProvider>
   );
 }
@@ -34,6 +37,7 @@ function RootStack() {
       <Stack.Protected guard={token !== null}>
         <Stack.Screen name="index" options={{ title: "Payback" }} />
         <Stack.Screen name="claim/[asset]" options={{ title: "Claim" }} />
+        <Stack.Screen name="claims/[id]" options={{ title: "Claim status" }} />
       </Stack.Protected>
     </Stack>
   );
