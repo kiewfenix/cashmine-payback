@@ -1,56 +1,31 @@
-# Welcome to your Expo app 👋
+# CashMine payback — practical task
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Live:** https://kiewfenix.github.io/cashmine-payback/ — opens on the token screen; paste your API token there. Designed for a ~390 px phone; on a desktop it renders in a centred phone-width column.
 
-## Get started
+Built with Expo SDK 58 (React Native, TypeScript, expo-router), shipped as a static web build to GitHub Pages by the workflow in `.github/workflows/deploy.yml` on every push to `main`.
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Run locally
 
 ```bash
-npm run reset-project
+npm install
+npx expo start --web                      # http://localhost:8081
+npm test                                  # unit tests for the money logic (jest)
+npx playwright install chromium           # once
+CASHMINE_TOKEN=<your token> npm run test:e2e   # Playwright at 390 / 360 / 320 px; starts the dev server if needed
+npx expo export --platform web            # static build in dist/
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+The token is only ever read from the environment (tests) or typed into the app (users); it is not in the code, the repo or the build. Route types are generated into the gitignored `.expo/` folder by `npx expo start`, so run that once on a fresh clone before `npx tsc --noEmit`.
 
-### Other setup steps
+## What works
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **Token screen** — asked for on first open, kept in the browser's `localStorage`, changeable from the header; a rejected token (401) brings you back here with an explanation.
+- **Balances (home)** — each asset's available / pending / claiming, USD value per asset and in total (exact decimal math, rounded once for display), "Updated hh:mm:ss · n s ago" ticking, amber **Stale** after 60 s or when a refresh fails (last good data stays on screen with Retry), skeleton on first load, header Refresh, auto-refresh every 15 s while the tab is visible.
+- **Claim** — pick an asset, type an amount or tap **Max** (inserts the exact available string), live validation against the API rules (grammar, decimals, minimum, available, positive payout), destination picker, fee and "You receive", then a confirmation step. Submission uses one `Idempotency-Key` per confirmation, persisted before sending; 429 is retried with the same key; an unknown outcome (504, 5xx, network, timeout) shows "We couldn't confirm your claim. Nothing will be claimed twice" with a same-key retry, and is resumed after a reload.
+- **Claim status** — polls every 2 s until completed or failed, shows amount, fee, received amount, destination and failure reason.
+- **After a claim** — the balances screen keeps the server's numbers and shows the claim as a separate line under the asset; the claim form's Max uses *available minus claims the snapshot does not include yet*. See `NOTES.md` for why.
+- **Tests** — 24 unit tests for parsing, validation, fee and totals; Playwright e2e for the token, balances, error/stale and claim flows at three phone widths.
 
-## Learn more
+**Not built:** the Activity history screen.
 
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+`NOTES.md` has the decisions, the AI moments and the known issues. `ai-logs/` has the prompts log and the full redacted session transcript.

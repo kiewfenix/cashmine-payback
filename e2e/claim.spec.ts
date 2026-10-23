@@ -41,8 +41,9 @@ test.describe("claim flow", () => {
     await page.getByRole("button", { name: "Confirm claim" }).click();
 
     await expect(page).toHaveURL(/claims\/clm_/, { timeout: 40_000 });
-    await expect(page.getByText(/^(Pending|Completed|Failed)$/)).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByText(/^(Completed|Failed)$/)).toBeVisible({ timeout: 60_000 });
+    // The web stack keeps the previous screen mounted, so match only what is visible.
+    await expect(page.getByText(/^(Pending|Completed|Failed)$/).filter({ visible: true })).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText(/^(Completed|Failed)$/).filter({ visible: true })).toBeVisible({ timeout: 60_000 });
     await page.screenshot({ path: `e2e/screenshots/claim-status-${testInfo.project.name}.png`, fullPage: true });
 
     await page.getByRole("button", { name: "Back to balances" }).click();

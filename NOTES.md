@@ -23,7 +23,19 @@ One idempotency key is generated per confirmed attempt and persisted **before** 
 - **Hosting**: GitHub Pages through a GitHub Actions workflow on every push to `main`, so no extra accounts and the deploy is reproducible; `baseUrl` is set accordingly and `404.html` mirrors `index.html` so deep links load the SPA.
 
 ## Working with AI
-_To be written at the end._
+Tool: Claude Code in VS Code. `ai-logs/prompts.md` has every prompt with a UTC time and a summary of what happened; `ai-logs/session-2026-10-23.md` is the full transcript.
+
+- **A prompt that did not get me what I wanted.** My first task prompt was broad: "create a blank public repo, it can be empty… do the basic app setup and check if the API is available" (`prompts.md`, ~19:19). The AI did far more than asked on its own judgement: it pushed three scaffold commits to the "empty" repo, picked GitHub Pages as the host and put the app in a subfolder. The result was fine, but I had not decided any of it. I changed approach: I asked it to analyse the whole brief first and produce a step-by-step prompt sequence with acceptance criteria, time boxes and commit names (~19:31), and every prompt after that is scoped to one topic with explicit checks (tsc, lint, tests, commit). The rest of the log is that sequence.
+- **A time AI output was wrong, and how I found out.** The polling hook (`useResource`) had a bug: every poll tick aborted the request still in flight and started a new one, so any request slower than the interval never finished. It was invisible on the balances screen (15 s poll) and showed up only when I added Playwright before the claim flow (20:00) and the claim status screen (2 s poll) sat on "Loading claim…" in the failure screenshot (20:25–20:26). The AI first blamed API slowness and raised the test timeout; the second failure at the same line made it re-read the hook and find the real cause (`fix: poll tick must not cancel an in-flight request`). Earlier, smaller: the first balances commit went out with a failing typecheck because the AI's shell guard did not stop its command chain (19:59), caught from the output and fixed in the next commit; and it attempted to rewrite the authorship of three commits with `git filter-branch` plus a force push, which the tool's safety check blocked (19:31) — rewriting a history that is part of the submission was the wrong move, so we kept the history.
+- **A time I disagreed or rejected a suggestion.** The AI added `Co-Authored-By` trailers and multi-line bodies to commits. I rejected that and set the rule in `CLAUDE.md`: one short conventional line, no trailers (19:31). I also pushed back on its plan to go straight from balances to the claim flow: I inserted an e2e and small-phone layout review first (20:00), which is what caught the polling bug above and two layout details (a live region on a ticking label, an unformatted price).
 
 ## Not done / known issues
-_To be written at the end._
+- **Activity history** (priority 4) is not built; the endpoint client exists (`getActivity`), the screen does not.
+- No e2e for the unknown-outcome path (504/timeout on `POST /v1/claims`); it is covered by code review only. Next step: Playwright route interception that returns 504 once and asserts the same `Idempotency-Key` is resent.
+- A very large USD total could wrap the 36 px headline at 320 px; needs a smaller font step.
+- List amounts are truncated to 8 decimals for readability; the exact value appears on the claim screen and in Max.
+- The claim status screen shows the destination id rather than its label (the label lives in claim-options, not fetched there).
+- Failed and completed claim lines on the balances screen come from the local store, so they do not survive clearing browser storage; the activity feed would be the durable source.
+- When a GET is rate-limited with a long `retryAfterMs`, the UI shows a spinner without saying why.
+- Route types are generated into gitignored `.expo/`; a fresh clone needs `npx expo start` once before `tsc` passes.
+- With more time: the activity screen, polling balances every 5 s while a claim is in flight, destination labels on the status screen, and visual regression screenshots in CI.
