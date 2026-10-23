@@ -49,3 +49,16 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 > - src/state/token.tsx: TokenProvider + useToken(); token in localStorage (guard when window is undefined), setToken/clearToken; a helper so any 401 clears the token and routes to /token.
 > - src/app/token.tsx: text field (secureTextEntry off, autoCapitalize none), Save, one sentence explaining the token stays in this browser. src/app/_layout.tsx: Stack with providers, a centered column max 430px wide (full width on phones), header right button "Token" → /token. src/app/index.tsx: placeholder that redirects to /token when there is no token.
 > Strict TypeScript, no any. Run npx tsc --noEmit and npx expo lint, start npx expo start --web and confirm the token screen renders. Commit `feat: api client and token screen` and push.
+
+**Done:** added `src/api/{config,types,client,endpoints,useApi}.ts`, `src/state/token.tsx` (localStorage, `withAuth` clears the token on 401), `src/ui/{theme,Button}`, `src/app/_layout.tsx` (providers, 430px frame, `Stack.Protected` guard, header "Token" link), `src/app/token.tsx`, and a placeholder `src/app/index.tsx` that calls `/v1/balances` as a smoke test. `expo lint` set up ESLint on first run. tsc, lint and `expo export` clean. Commit `feat: api client and token screen`, pushed.
+
+## 2026-10-23 19:49 UTC
+
+> Implement src/lib/money.ts with exact decimal arithmetic using BigInt fixed-point. No floats anywhere, no dependencies. Amounts are strings at the boundaries and { units: bigint, decimals } inside.
+> - parseAmount(input, decimals): trims, accepts a comma as decimal separator by converting to a dot, then enforces the API grammar: digits with an optional dot and more digits, no leading zeros ("0.5", "12" ok; ".5", "1.", "05", "1e-3", "", "-1" rejected), at most `decimals` fraction digits. Returns { ok: true, units } or { ok: false, reason: 'empty' | 'format' | 'too_many_decimals' }.
+> - formatUnits(units, decimals, { maxFractionDigits? }): canonical string, trailing zeros trimmed, never exponent form, truncation (not rounding) when maxFractionDigits is given.
+> - add, sub, compare on same-decimals units; isZero.
+> - mulToUsdCents(units, decimals, usdPrice: string): bigint cents rounded half-up. formatUsd(cents): "$1,234.56" (negative as "-$…").
+> - computeReceive(amountUnits, feeUnits) and validateClaimAmount({ input, decimals, minAmount, available, fee }) returning { ok: true, units } or { ok: false, code: 'empty' | 'format' | 'too_many_decimals' | 'below_min' | 'above_available' | 'not_positive_after_fee' }.
+> - sumUsdCents(items: { amount, decimals, usdPrice }[]).
+> Then set up jest: npx expo install jest-expo jest @types/jest, "test": "jest", "jest": { "preset": "jest-expo" }. Write src/lib/__tests__/money.test.ts covering: the grammar cases above, decimals limit (6 for USDT, 18 for ETH), 18-decimal ETH values floats can't represent (e.g. "12.345678901234591676" minus "0.000000000000000001"), validation at the boundaries (== min, == available, one unit below min, one unit above available), fee/receive, USD rounding half-up and totals, comma input. Run npm test until green. Commit `feat: exact money math with tests` and push.
