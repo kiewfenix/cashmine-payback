@@ -77,6 +77,8 @@ export function useResource<T>(load: (signal: AbortSignal) => Promise<T>, option
   useEffect(() => {
     if (!enabled || !pollMs) return;
     const timer = setInterval(() => {
+      // A poll tick never cancels a request that is still running; it just waits for the next tick.
+      if (controllerRef.current !== null) return;
       if (isPageVisible() && (pollWhileRef.current?.(dataRef.current) ?? true)) void run();
     }, pollMs);
     const onVisible = () => {
