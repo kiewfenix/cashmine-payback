@@ -19,6 +19,15 @@ const TYPE_LABEL: Record<ActivityType, string> = {
   claim: "Claim",
 };
 
+function dedupeById(items: ActivityItem[]): ActivityItem[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
 interface ExtraPages {
   items: ActivityItem[];
   nextCursor: string | null;
@@ -32,7 +41,8 @@ export default function ActivityScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [moreError, setMoreError] = useState<string | null>(null);
 
-  const items = [...(data?.items ?? []), ...(extra?.items ?? [])];
+  // The cursor is offset-based, so a new item at the top shifts later pages and repeats a row. Keep the first copy.
+  const items = dedupeById([...(data?.items ?? []), ...(extra?.items ?? [])]);
   const nextCursor = extra ? extra.nextCursor : (data?.nextCursor ?? null);
 
   const reload = () => {
