@@ -20,7 +20,14 @@ test.describe("claim flow", () => {
     await page.goto("/");
     await enterToken(page, token);
     await page.getByRole("button", { name: /Claim USDT/ }).click({ timeout: 30_000 });
-    await expect(page.getByText(/^Minimum /)).toBeVisible({ timeout: 30_000 });
+    // The test API injects failures on purpose; press Retry the way a user would.
+    const minimum = page.getByText(/^Minimum /);
+    for (let attempt = 0; attempt < 5 && !(await minimum.isVisible()); attempt += 1) {
+      const retry = page.getByRole("button", { name: "Retry" });
+      if (await retry.isVisible()) await retry.click();
+      await page.waitForTimeout(3_000);
+    }
+    await expect(minimum).toBeVisible({ timeout: 30_000 });
 
     const amount = page.getByLabel("Amount");
     await amount.fill("abc");
@@ -47,7 +54,13 @@ test.describe("claim flow", () => {
     await page.screenshot({ path: `e2e/screenshots/claim-status-${testInfo.project.name}.png`, fullPage: true });
 
     await page.getByRole("button", { name: "Back to balances" }).click();
-    await expect(page.getByText("Available to claim").first()).toBeVisible({ timeout: 30_000 });
+    const balances = page.getByText("Available to claim").filter({ visible: true }).first();
+    for (let attempt = 0; attempt < 5 && !(await balances.isVisible()); attempt += 1) {
+      const retry = page.getByRole("button", { name: "Retry" });
+      if (await retry.isVisible()) await retry.click();
+      await page.waitForTimeout(3_000);
+    }
+    await expect(balances).toBeVisible({ timeout: 30_000 });
     await page.screenshot({ path: `e2e/screenshots/after-claim-${testInfo.project.name}.png`, fullPage: true });
   });
 });
