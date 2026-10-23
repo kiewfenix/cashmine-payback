@@ -39,3 +39,13 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 > Create ai-logs/README.md (what the folder is: prompts log + full session export added at the end, tokens redacted) and ai-logs/prompts.md as a running log. From now on, before you act on any message I send, append it verbatim to ai-logs/prompts.md with a UTC timestamp, and when you finish, append a 1–3 line summary of what you did (files, commit). Backfill prompts.md with every prompt I already sent in this session, in order, with the tokens replaced by [REDACTED]. Commit as `chore: add ai-logs prompt tracking` and push.
 
 **Done:** created `ai-logs/README.md` and this file with the backfill. Committed `CLAUDE.md` separately as `chore: add claude working rules`, then `chore: add ai-logs prompt tracking`, and pushed.
+
+## 2026-10-23 19:41 UTC
+
+> Build the app foundation, no feature screens yet.
+> - src/api/config.ts exports API_BASE_URL = "https://task-api.cashmine.io" — the only place the base URL exists.
+> - src/api/client.ts: apiFetch<T>(path, { method, body, token, idempotencyKey, timeoutMs = 15000 }) on fetch + AbortController. Map non-2xx bodies ({ error: { code, message, field, retryAfterMs } }) to a typed ApiError (status, code, message, field, retryAfterMs); throw NetworkError on fetch failure and TimeoutError on abort. For GET only: on 429 wait retryAfterMs (fallback Retry-After header) and retry once. Never auto-retry POST here; the claim flow decides.
+> - src/api/types.ts: types exactly per https://task-api.cashmine.io/docs (all amounts are strings). src/api/endpoints.ts: getBalances, getActivity({cursor, limit}), getClaimOptions(asset), createClaim(body, idempotencyKey) returning { claim, replayed }, getClaim(id).
+> - src/state/token.tsx: TokenProvider + useToken(); token in localStorage (guard when window is undefined), setToken/clearToken; a helper so any 401 clears the token and routes to /token.
+> - src/app/token.tsx: text field (secureTextEntry off, autoCapitalize none), Save, one sentence explaining the token stays in this browser. src/app/_layout.tsx: Stack with providers, a centered column max 430px wide (full width on phones), header right button "Token" → /token. src/app/index.tsx: placeholder that redirects to /token when there is no token.
+> Strict TypeScript, no any. Run npx tsc --noEmit and npx expo lint, start npx expo start --web and confirm the token screen renders. Commit `feat: api client and token screen` and push.
