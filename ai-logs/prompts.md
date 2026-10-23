@@ -111,3 +111,7 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 No prompt was sent for this step. With 30 minutes left, the AI announced it was starting the submission step from the plan (README, NOTES sections, transcript export) and did so; Vasyl could stop or change it.
 
 **Done:** `README.md` (live link, how to run, what works, not built), `NOTES.md` "Working with AI" and "Not done / known issues" sections, `ai-logs/session-2026-10-23.md` exported from the Claude Code session file with tokens and email addresses redacted, images omitted and long tool outputs truncated. First export still contained the email inside the redaction script's own regex; widened the pattern and re-exported. Claim e2e locator fixed to match only visible text. Commit `docs: notes, readme and ai logs`, pushed.
+
+## 2026-10-23 20:34 UTC — no prompt (finishing)
+
+**Done:** claim e2e now passes end to end (token → Claim USDT → validation messages → minimum amount → destination → confirm → status screen reaches Completed → back to balances). Three test-side fixes along the way, none in the app: match only visible text (the web stack keeps previous screens mounted), press Retry when the test API injects a 503, select a destination. Final transcript export, secrets scan, commits `test: claim e2e handles injected api failures` and `docs: final ai logs export`, pushed, deploy verified.
