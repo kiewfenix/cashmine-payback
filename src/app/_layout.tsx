@@ -33,6 +33,7 @@ function RootStack() {
       {/* Everything below needs a token; without one the router falls back to the token screen. */}
       <Stack.Protected guard={token !== null}>
         <Stack.Screen name="index" options={{ title: "Payback" }} />
+        <Stack.Screen name="claim/[asset]" options={{ title: "Claim" }} />
       </Stack.Protected>
     </Stack>
   );

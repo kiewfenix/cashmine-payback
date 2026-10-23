@@ -62,3 +62,14 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 > - computeReceive(amountUnits, feeUnits) and validateClaimAmount({ input, decimals, minAmount, available, fee }) returning { ok: true, units } or { ok: false, code: 'empty' | 'format' | 'too_many_decimals' | 'below_min' | 'above_available' | 'not_positive_after_fee' }.
 > - sumUsdCents(items: { amount, decimals, usdPrice }[]).
 > Then set up jest: npx expo install jest-expo jest @types/jest, "test": "jest", "jest": { "preset": "jest-expo" }. Write src/lib/__tests__/money.test.ts covering: the grammar cases above, decimals limit (6 for USDT, 18 for ETH), 18-decimal ETH values floats can't represent (e.g. "12.345678901234591676" minus "0.000000000000000001"), validation at the boundaries (== min, == available, one unit below min, one unit above available), fee/receive, USD rounding half-up and totals, comma input. Run npm test until green. Commit `feat: exact money math with tests` and push.
+
+**Done:** `src/lib/money.ts` (BigInt fixed-point: parseAmount with the API grammar + comma support, toUnits for signed server amounts, formatUnits with truncating display precision, compare/isZero, mulToUsdCents and sumUsdCents rounding half-up once, formatUsd, computeReceive, validateClaimAmount). jest-expo installed; `src/lib/__tests__/money.test.ts` has 24 tests, all green. One expectation I wrote was wrong (expected an untrimmed trailing zero after truncation) and was corrected. tsc and lint clean. Commit `feat: exact money math with tests`, pushed.
+
+## 2026-10-23 19:53 UTC
+
+> Build the Balances home screen in src/app/index.tsx (keep the redirect to /token when there is no token).
+> - src/hooks/useResource.ts: generic hook returning { data, error, loading, refreshing, refetch } with an optional pollMs that pauses when document.hidden, and cancels on unmount. Keep the last good data when a refetch fails.
+> - Load GET /v1/balances. Headline: total available in USD (sumUsdCents). Second line: pending total in USD. Then a card per asset with available (claimable), pending, claiming, USD value of available, and a Claim button (disabled when available is 0) linking to /claim/[asset]. Format crypto with up to 8 fraction digits, trailing zeros trimmed.
+> - Freshness line "Updated 19:20:26 · 12 s ago" from asOf, ticking every second; amber "stale" when older than 60 s or when the last refresh failed, while still showing the last good data with the error above it.
+> - States: initial loading skeleton; error with a Retry button and a friendly message per error type (ApiError message, NetworkError "Can't reach CashMine", TimeoutError); 401 → token screen; header Refresh button; auto refresh every 15 s. No pull-to-refresh (react-native-web doesn't support it).
+> Design for a 390px phone. Check it in the browser. npx tsc --noEmit, npx expo lint. Commit `feat: balances screen` and push.
