@@ -79,3 +79,15 @@ Model: Claude Opus 5.5 for the first prompt, Claude Fable 5.1 from the second pr
 ## 2026-10-23 20:00 UTC
 
 > Before we move forward:  install the playwright library and test e2e already created functionality + pay attention to initial requirements for the responsive layout on the small phones. After - give me the short list of what is done well and what should be fixed.
+
+**Done:** installed `@playwright/test` + Chromium, `playwright.config.ts` with three phone projects (390×844, 360×740, 320×568), `e2e/balances.spec.ts` with 5 scenarios × 3 widths = 15 passing: token screen first, balances render without horizontal overflow, token survives reload, a rejected token (401) returns to the token screen with an explanation, a forced 503 on refresh keeps the last balances with a warning + Stale label and Retry recovers, Claim button routes to `/claim/USDT`. Token comes from `CASHMINE_TOKEN` env only. Reviewed the screenshots at 320/390: layout fine; fixed two things found (aria-live on the ticking "s ago" line, no thousands grouping on the price row). jest ignores `e2e/`. Commits `test: playwright e2e for token and balances`, `fix: price grouping and ticking live region`, pushed.
+
+## 2026-10-23 20:07 UTC
+
+> Before we build the claim flow I need a decision. What should the balances screen show right after a claim is submitted? Two users gave opposite feedback: (1) "I claimed and my balance didn't change, so I claimed again." (2) "My balance dropped, then jumped back up, and I stopped trusting the app." Balances are 15-second snapshots (asOf) and a claim settles to completed or failed in about 20 seconds; a failed claim returns the amount to available. Give me at least two clearly different approaches. For each: what the user sees, how it handles both complaints, failure modes, and implementation cost in our codebase. Don't pick one, just give me some thoughts, I will decide by my own.
+
+**Done:** answered in chat with three approaches (optimistic local update; server truth + explicit pending UI; reconciled overlay) and no recommendation. Decision pending.
+
+## 2026-10-23 20:09 UTC
+
+> Go with the reconciled approach: the headline numbers are always the server snapshot and never change locally. Keep in-flight claims in a small store (src/state/claims.tsx, persisted in localStorage per token) and show them as a separate labelled line under the asset plus a banner. The claim form's Max and validation use effective available = snapshot.available minus in-flight claims not yet reflected; a claim counts as reflected once a snapshot with asOf >= claim.createdAt arrives, then the overlay is dropped. If the claim fails, say so on that line. Create NOTES.md now with a Decisions section and write this decision in it with the alternatives and why. Commit `docs: start notes with decisions`.
