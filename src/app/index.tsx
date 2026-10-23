@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { errorMessage } from "@/api/client";
@@ -10,6 +10,7 @@ import { useNow } from "@/hooks/useNow";
 import { useResource } from "@/hooks/useResource";
 import { formatClock, secondsSince } from "@/lib/format";
 import { formatUsd, sumUsdCents } from "@/lib/money";
+import { useClaims } from "@/state/claims";
 import { ErrorBanner } from "@/ui/ErrorBanner";
 import { HeaderButton } from "@/ui/HeaderButton";
 import { colors, spacing } from "@/ui/theme";
@@ -21,6 +22,14 @@ export default function BalancesScreen() {
   const api = useApi();
   const load = useCallback((signal: AbortSignal) => api.balances(signal), [api]);
   const { data, error, loading, refreshing, refetch } = useResource(load, { pollMs: POLL_MS });
+  const { reconcile, refreshPending } = useClaims();
+
+  // Each snapshot can retire reflected claims; pending ones are re-read so their lines stay current.
+  useEffect(() => {
+    if (data === null) return;
+    reconcile(data);
+    void refreshPending();
+  }, [data, reconcile, refreshPending]);
 
   return (
     <>
@@ -52,9 +61,22 @@ function Balances({ data, error, refreshing, onRetry }: BalancesProps) {
   const age = secondsSince(data.asOf, now);
   const stale = age > STALE_AFTER_S || error !== null;
   const totals = safeTotals(data);
+  const { attempts, submitAttempt } = useClaims();
+  const unknown = attempts.filter((a) => a.status === "unknown");
+  const resolving = attempts.some((a) => a.status === "submitting");
 
   return (
     <View style={styles.list}>
+      {unknown.map((attempt) => (
+        <ErrorBanner
+          key={attempt.key}
+          tone="warning"
+          message={`A claim of ${attempt.body.amount} ${attempt.body.asset} could not be confirmed. Nothing will be claimed twice: resolving resends the same request with the same key.`}
+          onRetry={() => void submitAttempt(attempt)}
+          retryLabel="Resolve"
+          retrying={resolving}
+        />
+      ))}
       {error !== null ? (
         <ErrorBanner
           tone="warning"
@@ -73,7 +95,12 @@ function Balances({ data, error, refreshing, onRetry }: BalancesProps) {
       </View>
       {data.items.length === 0 ? <Text style={styles.empty}>No payback balances yet.</Text> : null}
       {data.items.map((item) => (
-        <AssetCard key={item.asset} item={item} />
+        <AssetCard
+          key={item.asset}
+          item={item}
+          asOf={data.asOf}
+          attempts={attempts.filter((a) => a.body.asset === item.asset)}
+        />
       ))}
     </View>
   );
